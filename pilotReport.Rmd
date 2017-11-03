@@ -1,0 +1,123 @@
+---
+title: "CARPS Reproducibility Report"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+#### Article ID: CARPS_6-7-2014_PS
+#### Pilot 1: Kiara Sanchez
+#### Co-pilot: Dawn Finzi
+#### Start date: [11/02/17]
+#### End date: [11/05/17]   
+
+-------
+
+#### Methods summary: 
+[Write a brief summary of the methods underlying the target outcomes written in your own words]
+
+------
+
+#### Target outcomes: 
+> We carried out a 2 (orientation: toward, away from) × 4
+(station: Spadina, St. George, Bloor-Yonge, Sherbourne)
+analysis of variance (ANOVA) on closeness ratings, which
+revealed no main effect of orientation, F < 1, and a main
+effect of station, F(3, 194) = 24.10, p < .001, ηp
+2 = .27. This main effect was qualified by the predicted interaction
+between orientation and station, F(3, 194) = 16.28, p < .001, ηp2 = .20. We decomposed this interaction by the subjective-distance ratings between participants traveling
+east and west for each of the four subway stations.
+Westbound participants rated the stations to the west of
+Bay Street as closer than did eastbound participants; this
+effect was obtained for both the station one stop to the
+west (St. George, p < .001, ηp2 = .28) and the station two
+stops to the west (Spadina, p = .001, ηp2 = .20). The opposite
+pattern held true for stations to the east of Bay Street.
+Eastbound participants rated the stations to the east of
+Bay Street as closer than did westbound participants; this
+effect was obtained for both the station one stop to the
+east (Bloor-Yonge, p = .053, ηp2 = .08) and the station two
+stops to the east (Sherbourne, p < .001, ηp2 = .24). Figure 1 summarizes these results.
+
+------
+
+[The chunk below sets up some formatting options for the R Markdown document]
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+## Step 1: Load packages
+
+[Some useful packages are being loaded below. You can add any additional ones you might need too.]
+
+```{r}
+library(tidyverse) # for data munging
+library(knitr) # for kable table formating
+library(haven) # import and export 'SPSS', 'Stata' and 'SAS' Files
+library(readxl) # import excel files
+library(CARPSreports) # custom report functions
+```
+
+## Step 2: Load data
+
+```{r}
+```
+
+## Step 3: Tidy data
+
+```{r}
+```
+
+## Step 4: Run analysis
+
+### Pre-processing
+
+[you can remove this section if no pre-processing is required]
+
+```{r}
+```
+
+### Descriptive statistics
+
+```{r}
+```
+
+### Inferential statistics
+
+```{r}
+```
+
+## Step 5: Conclusion
+
+[Include the carpsReport function below]
+
+```{r}
+# You can delete this commented text for your report, it is here to serve as a guide.
+# Use the carpsReport() function in this code chunk.
+# Here is a guide to the arguments you should include in the function:
+# Report_Type: Enter 'pilot' or 'final'
+# Article_ID: Enter the article's unique ID code
+# Insufficient_Information_Errors: Enter the number of Insufficient Information Errors
+# Decision_Errors Enter: the number of decision errors
+# Major_Numerical_Errors: Enter the number of major numerical errors
+# Time_to_Complete: Enter the estimated time to complete the report in minutes
+# Author_Assistance: Enter whether author assistance was required (TRUE/FALSE)
+# FOR EXAMPLE:
+# carpsReport(Report_Type = "pilot", 
+#             Article_ID = "ABhgyo", 
+#             Insufficient_Information_Errors = 0, 
+#             Decision_Errors = 1, 
+#             Major_Numerical_Errors = 4, 
+#             Time_to_Complete = 120, 
+#             Author_Assistance = TRUE)
+```
+
+[Please also include a brief text summary describing your findings. If this reproducibility check was a failure, you should note any suggestions as to what you think the likely cause(s) might be.]
+
+[This function will output information about the package versions used in this report:]
+
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+devtools::session_info()
+```
