@@ -1,0 +1,254 @@
+---
+title: "CARPS Reproducibility Report"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+#### Article ID: CARPS_6-7-2014_PS
+#### Pilot 1: Kiara Sanchez
+#### Co-pilot: Dawn Finzi
+#### Start date: [11/02/17]
+#### End date: [11/05/17]   
+
+-------
+
+#### Methods summary: 
+
+Researchers recruited 202 volunteers at a subway station in Toronto, Ontario, Canada. Half of the sample was traveling East, while the other half was traveling West. In a 2 (orientation: toward, away from) X 4 (station: Spadina, St. George, Bloor-Yonge, Sherbourne) design, each participant was randomly asked to estimate how far one of the four stations felt to them (1= very close, 7= very far). Authors conducted a 2 X 4 ANOVA on distance estimates, and then tested differences in distance estimates between East and West-bound groups for each individual station.
+
+------
+
+#### Target outcomes: 
+> We carried out a 2 (orientation: toward, away from) × 4
+(station: Spadina, St. George, Bloor-Yonge, Sherbourne)
+analysis of variance (ANOVA) on closeness ratings, which
+revealed no main effect of orientation, F < 1, and a main
+effect of station, F(3, 194) = 24.10, p < .001, ηp
+2 = .27. This main effect was qualified by the predicted interaction
+between orientation and station, F(3, 194) = 16.28, p < .001, ηp2 = .20. We decomposed this interaction by the subjective-distance ratings between participants traveling
+east and west for each of the four subway stations.
+Westbound participants rated the stations to the west of
+Bay Street as closer than did eastbound participants; this
+effect was obtained for both the station one stop to the
+west (St. George, p < .001, ηp2 = .28) and the station two
+stops to the west (Spadina, p = .001, ηp2 = .20). The opposite
+pattern held true for stations to the east of Bay Street.
+Eastbound participants rated the stations to the east of
+Bay Street as closer than did westbound participants; this
+effect was obtained for both the station one stop to the
+east (Bloor-Yonge, p = .053, ηp2 = .08) and the station two
+stops to the east (Sherbourne, p < .001, ηp2 = .24). Figure 1 summarizes these results.
+
+------
+
+[The chunk below sets up some formatting options for the R Markdown document]
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+## Step 1: Load packages
+
+[Some useful packages are being loaded below. You can add any additional ones you might need too.]
+
+```{r}
+library(tidyverse) # for data munging
+library(knitr) # for kable table formating
+library(haven) # import and export 'SPSS', 'Stata' and 'SAS' Files
+library(readxl) # import excel files
+library(CARPSreports) # custom report functions
+
+library(TMB)
+library(sjstats) # computes eta squared for anova 
+```
+
+## Step 2: Load data
+
+```{r}
+d = read_excel("data/S1_Subway.xlsx")
+```
+
+## Step 3: Tidy data
+
+```{r}
+#data set already in tidy format 
+```
+
+## Step 4: Run analysis
+
+### Pre-processing
+
+```{r}
+# make variables factors
+d$DIRECTION = as.factor(d$DIRECTION)
+d$STN_NAME = as.factor(d$STN_NAME)
+
+# subset dataframes for individual tests 
+BY = subset(d, STN_NAME == "B-Y")
+SHER = subset(d, STN_NAME == "SHER")
+SPAD = subset(d, STN_NAME == "SPAD")
+STG = subset(d, STN_NAME == "STG")
+
+
+#Tried different contrasts to get reported main effect. No success. Same output with different contrasts.
+
+# set levels
+#d$STN_NAME = factor(d$STN_NAME,levels = c('SPAD', 'STG', 'B-Y', 'SHER'))
+
+#backward difference coding
+#contrasts(d$STN_NAME) = cbind(C1=c(-.75, .25, .25, .25), 
+                           #C2=c(-.5, -.5, .5, .5),
+                           #C3=c(-.25, -.25, -.25, .75)); contrasts(d$STN_NAME)
+
+#other coding schemes
+#contrasts(d$STN_NAME) = cbind(C1=c(-1, 1, 0, 0), 
+                           #C2=c(0, 1, -1, 0),
+                           #C3=c(-0, 0, 1, -1)); contrasts(d$STN_NAME)
+```
+
+
+### Descriptive statistics
+
+```{r}
+# Ns for each condition 
+# West should = 101 ; East should = 101
+
+N_cond = d %>%
+  group_by(DIRECTION) %>%
+  summarise(N = length(DIRECTION))
+
+kable(N_cond) #Ns are correct
+
+summary_STN = d %>%
+  group_by(STN_NAME) %>%
+  summarise(mean_distance = mean(DISTANCE), 
+            sd_distance = sd(DISTANCE))
+kable(summary_STN)
+
+summary_DIRECTION = d %>%
+  group_by(DIRECTION) %>%
+  summarise(mean_distance = mean(DISTANCE), 
+            sd_distance = sd(DISTANCE))
+kable(summary_DIRECTION) 
+
+summary_int = d %>%
+  group_by(STN_NAME, DIRECTION) %>%
+  summarise(mean_distance = mean(DISTANCE), 
+            sd_distance = sd(DISTANCE))
+kable(summary_int) #interaction summary
+```
+
+### Inferential statistics
+
+```{r}
+# 2 (DIRECTION) X 4 (STATION) ANOVA
+  # reported main effect of STATION: F(3, 194)= 24.10, p < .001
+  # reported interaction: F(3, 194)= 16.28, p < .001
+
+t1 <- aov(DISTANCE ~ DIRECTION * STN_NAME, data=d)
+summary(t1)
+
+t1a <- anova(lm(DISTANCE ~ DIRECTION * STN_NAME, data=d))
+t1a #ran same test a different way to double check
+
+# MAIN EFFECT OBTAINED: F(3, 194)= 23.25, p < .001
+# INTERACTION OBTAINED: SAME
+
+#calculate error
+maineffect_error = compareValues(reportedValue = 24.10, obtainedValue = 23.25)
+maineffect_error 
+#MINOR ERROR: 3.73%
+
+
+
+  #reported effect size (main effect of STR_NAME): 0.27
+  #reported effect size (STR_NAME X DIRECTION interaction):   0.20
+
+etaSQ_t1 = eta_sq(t1)
+etaSQ_t1 
+etaSQ_t1a = eta_sq(t1a)
+etaSQ_t1a
+
+# MAIN EFFECT SIZE OBTAINED: 0.22
+# INTERACTION EFFECT SIZE OBTAINED: 0.16
+
+#calculate error
+etasqM_error = compareValues(reportedValue = 0.27, obtainedValue = 0.22)
+etasqM_error
+#MAJOR ERROR OF MAIN EFFECT SIZE: 18.52% 
+
+
+etasqI_error = compareValues(reportedValue = 0.20, obtainedValue = 0.16)
+etasqI_error
+#NO ERROR OF INTERACTION EFFECT SIZE: 0%
+
+
+
+
+# DISTANCE ~ DIRECTION for each station
+
+  #St. George
+  #reported p < .001
+  #reported effect size = 0.28
+t2 <- aov(DISTANCE ~ DIRECTION, data=STG)
+summary(t2)
+etaSQ_t2 = eta_sq(t2)
+etaSQ_t2 
+  #obtained p < .001
+  #obtained effect size = 0.28
+
+  #Spadina
+  #reported p = .001
+  #reported effect size = 0.20
+t3 <- aov(DISTANCE ~ DIRECTION, data=SPAD)
+summary(t3) 
+etaSQ_t3 = eta_sq(t3)
+etaSQ_t3 
+  #obtained p = .001
+  #obtained effect size = 0.20
+
+  #Bloor-Yonge
+  #reported p = .053
+  #reported effect size = 0.08
+t4 <- aov(DISTANCE ~ DIRECTION, data=BY)
+summary(t4) 
+etaSQ_t4 = eta_sq(t4)
+etaSQ_t4 
+  #obtained p = .053
+  #obtained effect size = 0.08
+
+  #Sherbourne
+  #reported p < .001
+  #reported effect size = 0.24
+t5 <- aov(DISTANCE ~ DIRECTION, data=SHER)
+summary(t5) 
+etaSQ_t5 = eta_sq(t5)
+etaSQ_t5 
+  #reported p < .001
+  #reported effect size = 0.24
+```
+
+## Step 5: Conclusion
+
+```{r}
+carpsReport(Report_Type = 'pilot',
+          Article_ID = 'CARPS_6-7-2014_PS', 
+          Insufficient_Information_Errors = 0,
+          Decision_Errors = 0,
+          Major_Numerical_Errors = 1,
+          Time_to_Complete = 180, 
+          Author_Assistance = FALSE)
+```
+
+Overall, this dataset was well-organized, and it was easy to implement the statistical tests described in the original paper.
+
+One conceptual issue that made it tricky to decide how to analyze the data was that the authors classified one of their ANOVA factors as "orientation" with the levels "toward" and "away from," when it appears they actually tested "direction," with the levels "East" and "West." Instead of running a 2 (toward, away from) X 4 (station) ANOVA as they described, they actually ran a 2 (East, West) X 4 (station) ANOVA and then tested whether orientation (toward, away from) influenced distance ratings by assessing differences between East and West groups for each station individually. This was a little confusing to parse out because I think I would have created a separate "orientation" variable and run an ANOVA with that based on their description of the design, but their secondary tests as well as Figure 1, which depicts orientation as "Traveling West" and "Traveling East" instead of "toward" and "away from" clued me in to the fact that they used direction instead of orientation. 
+
+I found one minor and one major error regarding the main effect of Station. The minor error included a 3.73% error on the reported F statistic for the main effect of Station in the 2 (direction) X 4 (station) ANOVA (reported= 24.1, obtained= 23.2). The major error was a 18.54% error on the reported eta squared for the same statistic (reported= 0.27, obtained= 0.22). One issue that should be noted is that I found a discrepancy of similar size in the eta squared for the Direction X Station interaction statistic (reported= 0.20, obtained= 0.16), but the compareValues() function reported this discrepancy as a match. It might be likely that in the matched statistic 0.16 was rounded to 0.20, whereas in the major error statistic, 0.27 was rounded to 0.30 and 0.22 was rounded to 0.20, causing a larger discrepancy. This raises a question of whether one statistic was incorrectly classified as a match, or the other was incorrectly classified as a major error. 
+
+
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+devtools::session_info()
+```
