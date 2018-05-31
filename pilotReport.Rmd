@@ -6,11 +6,17 @@ output:
     toc_float: true
 ---
 
-#### Article ID: CARPS_6-7-2014_PS
-#### Pilot 1: Kiara Sanchez
-#### Co-pilot: Dawn Finzi
-#### Start date: [11/02/17]
-#### End date: [11/05/17]   
+```{r}
+articleID <- "6-7-2014_PS" # insert the article ID code here e.g., "10-3-2015_PS"
+reportType <- 'pilot'
+pilotNames <- "Dawn Finzi, Kiara Sanchez" # insert the pilot's name here e.g., "Tom Hardwicke". If there are multiple pilots enter both names in a character string e.g., "Tom Hardwicke, Bob Dylan"
+copilotNames <- "" # insert the co-pilot's name here e.g., "Michael Frank". If there are multiple co-pilots enter both names in a character string e.g., "Tom Hardwicke, Bob Dylan"
+pilotTTC <- 180 # insert the pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
+copilotTTC <- NA # insert the co- pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
+pilotStartDate <- as.Date("11/02/17", format = "%m/%d/%y") # insert the pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+copilotStartDate <- as.Date("", format = "%m/%d/%y") # insert the co-pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+completionDate <- as.Date("", format = "%m/%d/%y") # copilot insert the date of final report completion (after any necessary rounds of author assistance) in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+```
 
 -------
 
@@ -59,9 +65,13 @@ library(knitr) # for kable table formating
 library(haven) # import and export 'SPSS', 'Stata' and 'SAS' Files
 library(readxl) # import excel files
 library(CARPSreports) # custom report functions
-
-library(TMB)
+#library(TMB)
 library(sjstats) # computes eta squared for anova 
+```
+
+```{r}
+# Prepare report object. This will be updated automatically by the reproCheck function each time values are compared.
+reportObject <- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = NA, valueType = NA, percentageError = NA, comparisonOutcome = NA, eyeballCheck = NA)
 ```
 
 ## Step 2: Load data
@@ -72,9 +82,7 @@ d = read_excel("data/S1_Subway.xlsx")
 
 ## Step 3: Tidy data
 
-```{r}
-#data set already in tidy format 
-```
+Data set already in tidy format.
 
 ## Step 4: Run analysis
 
@@ -157,9 +165,9 @@ t1a #ran same test a different way to double check
 # INTERACTION OBTAINED: SAME
 
 #calculate error
-maineffect_error = compareValues(reportedValue = 24.10, obtainedValue = 23.25)
-maineffect_error 
-#MINOR ERROR: 3.73%
+reportObject <- reproCheck(reportedValue = "24.10", obtainedValue = 23.25, valueType = 'F')
+ 
+#MINOR ERROR: 3.53%
 
 
 
@@ -175,13 +183,12 @@ etaSQ_t1a
 # INTERACTION EFFECT SIZE OBTAINED: 0.16
 
 #calculate error
-etasqM_error = compareValues(reportedValue = 0.27, obtainedValue = 0.22)
-etasqM_error
+reportObject <- reproCheck(reportedValue = "0.27", obtainedValue = 0.22, valueType = 'F')
+
 #MAJOR ERROR OF MAIN EFFECT SIZE: 18.52% 
 
 
-etasqI_error = compareValues(reportedValue = 0.20, obtainedValue = 0.16)
-etasqI_error
+reportObject <- reproCheck(reportedValue = "0.20", obtainedValue = 0.16, valueType = 'F')
 #NO ERROR OF INTERACTION EFFECT SIZE: 0%
 
 
@@ -232,22 +239,64 @@ etaSQ_t5
 
 ## Step 5: Conclusion
 
-```{r}
-carpsReport(Report_Type = 'pilot',
-          Article_ID = 'CARPS_6-7-2014_PS', 
-          Insufficient_Information_Errors = 0,
-          Decision_Errors = 0,
-          Major_Numerical_Errors = 1,
-          Time_to_Complete = 180, 
-          Author_Assistance = FALSE)
-```
-
 Overall, this dataset was well-organized, and it was easy to implement the statistical tests described in the original paper.
 
 One conceptual issue that made it tricky to decide how to analyze the data was that the authors classified one of their ANOVA factors as "orientation" with the levels "toward" and "away from," when it appears they actually tested "direction," with the levels "East" and "West." Instead of running a 2 (toward, away from) X 4 (station) ANOVA as they described, they actually ran a 2 (East, West) X 4 (station) ANOVA and then tested whether orientation (toward, away from) influenced distance ratings by assessing differences between East and West groups for each station individually. This was a little confusing to parse out because I think I would have created a separate "orientation" variable and run an ANOVA with that based on their description of the design, but their secondary tests as well as Figure 1, which depicts orientation as "Traveling West" and "Traveling East" instead of "toward" and "away from" clued me in to the fact that they used direction instead of orientation. 
 
-I found one minor and one major error regarding the main effect of Station. The minor error included a 3.73% error on the reported F statistic for the main effect of Station in the 2 (direction) X 4 (station) ANOVA (reported= 24.1, obtained= 23.2). The major error was a 18.54% error on the reported eta squared for the same statistic (reported= 0.27, obtained= 0.22). One issue that should be noted is that I found a discrepancy of similar size in the eta squared for the Direction X Station interaction statistic (reported= 0.20, obtained= 0.16), but the compareValues() function reported this discrepancy as a match. It might be likely that in the matched statistic 0.16 was rounded to 0.20, whereas in the major error statistic, 0.27 was rounded to 0.30 and 0.22 was rounded to 0.20, causing a larger discrepancy. This raises a question of whether one statistic was incorrectly classified as a match, or the other was incorrectly classified as a major error. 
+I found one minor and one major error regarding the main effect of Station. The minor error included a 3.73% error on the reported F statistic for the main effect of Station in the 2 (direction) X 4 (station) ANOVA (reported= 24.1, obtained= 23.2). The major error was a 18.54% error on the reported eta squared for the same statistic (reported= 0.27, obtained= 0.22). One issue that should be noted is that I found a discrepancy of similar size in the eta squared for the Direction X Station interaction statistic (reported= 0.20, obtained= 0.16), but the reproCheck() function reported this discrepancy as a match. It might be likely that in the matched statistic 0.16 was rounded to 0.20, whereas in the major error statistic, 0.27 was rounded to 0.30 and 0.22 was rounded to 0.20, causing a larger discrepancy. This raises a question of whether one statistic was incorrectly classified as a match, or the other was incorrectly classified as a major error. 
 
+```{r}
+Author_Assistance = FALSE # was author assistance provided? (if so, enter TRUE)
+
+Insufficient_Information_Errors <- 0 # how many discrete insufficient information issues did you encounter?
+
+# Assess the causal locus (discrete reproducibility issues) of any reproducibility errors. Note that there doesn't necessarily have to be a one-to-one correspondance between discrete reproducibility issues and reproducibility errors. For example, it could be that the original article neglects to mention that a Greenhouse-Geisser correct was applied to ANOVA outcomes. This might result in multiple reproducibility errors, but there is a single causal locus (discrete reproducibility issue).
+
+locus_typo <- NA # how many discrete issues did you encounter that related to typographical errors?
+locus_specification <- NA # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
+locus_analysis <- NA # how many discrete issues did you encounter that related to errors in the authors' original analyses?
+locus_data <- NA # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
+locus_unidentified <- NA # how many discrete issues were there for which you could not identify the cause
+
+Affects_Conclusion <- NA # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
+```
+
+```{r}
+reportObject <- reportObject %>%
+  filter(dummyRow == FALSE) %>% # remove the dummy row
+  select(-dummyRow) %>% # remove dummy row designation
+  mutate(articleID = articleID) %>% # add the articleID 
+  select(articleID, everything()) # make articleID first column
+
+# decide on final outcome
+if(any(reportObject$comparisonOutcome != "MATCH") | Insufficient_Information_Errors > 0){
+  finalOutcome <- "Failure without author assistance"
+  if(Author_Assistance == T){
+    finalOutcome <- "Failure despite author assistance"
+  }
+}else{
+  finalOutcome <- "Success without author assistance"
+  if(Author_Assistance == T){
+    finalOutcome <- "Success with author assistance"
+  }
+}
+
+# collate report extra details
+reportExtras <- data.frame(articleID, pilotNames, copilotNames, pilotTTC, copilotTTC, pilotStartDate, copilotStartDate, completionDate, Author_Assistance, finalOutcome, Insufficient_Information_Errors, locus_typo, locus_specification, locus_analysis, locus_data, locus_unidentified)
+
+# save report objects
+if(reportType == "pilot"){
+  write_csv(reportObject, "pilotReportDetailed.csv")
+  write_csv(reportExtras, "pilotReportExtras.csv")
+}
+
+if(reportType == "final"){
+  write_csv(reportObject, "finalReportDetailed.csv")
+  write_csv(reportExtras, "finalReportExtras.csv")
+}
+```
+
+# Session information
 
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
 devtools::session_info()
