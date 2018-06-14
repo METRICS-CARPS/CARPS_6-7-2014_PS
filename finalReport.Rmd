@@ -169,10 +169,13 @@ t1_lm <- lm(DISTANCE ~ DIRECTION * STN_NAME, data=d)
 anova(t1_lm)#ran same test a different way to double check
 ```
 
-```{r test1 repro check}
-# MAIN EFFECT OBTAINED: F(3, 194)= 23.25, p < .001
-# INTERACTION OBTAINED: SAME
+```{r test1 repro check Fs}
+# no main effect of orientation
+# reportObject <- reproCheck(reportedValue="<1", obtainedValue=0.664, valueType = 'F')
+# main effect of station
 reportObject <- reproCheck(reportedValue = "24.10", obtainedValue = 23.25, valueType = 'F')
+# interaction between orientation and station
+reportObject <- reproCheck(reportedValue = "16.28", obtainedValue = 16.28, valueType = 'F')
 #MINOR ERROR: 3.53%
 ```
 
@@ -188,8 +191,10 @@ kable(etaSquared(t1))
 kable(etaSquared(t1_lm))
 ```
 
-```{r test 2 repro anova check}
+```{r test 2 repro check eta2s}
+# main effect of station
 reportObject <- reproCheck(reportedValue = "0.27", obtainedValue = 0.27, valueType = 'other')  # eta squared
+# interaction between orientation and station
 reportObject <- reproCheck(reportedValue = "0.20", obtainedValue = 0.20, valueType = 'other')  # eta squared
 ```
 
