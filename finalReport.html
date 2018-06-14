@@ -258,7 +258,12 @@ library(CARPSreports) # custom report functions
 # install.packages(&quot;sjstats&quot;)
 library(lsr)</code></pre>
 <pre class="r"><code># Prepare report object. This will be updated automatically by the reproCheck function each time values are compared.
-reportObject &lt;- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = NA, valueType = NA, percentageError = NA, comparisonOutcome = NA, eyeballCheck = NA)</code></pre>
+reportObject &lt;- data.frame(dummyRow = TRUE, 
+                           reportedValue = NA, 
+                           obtainedValue = NA, 
+                           valueType = NA, 
+                           percentageError = NA, 
+                           comparisonOutcome = NA, eyeballCheck = NA)</code></pre>
 </div>
 <div id="step-2-load-data" class="section level2">
 <h2>Step 2: Load data</h2>
@@ -643,7 +648,11 @@ df_stations &lt;- rbind(df_stations,
                      data.frame(&quot;reportedValue&quot;=&quot;0.24&quot;, &quot;obtainedValue&quot;=0.24, &quot;valueType&quot;=&quot;other&quot;,
                                 &quot;station&quot;=&quot;sherbourne&quot;))</code></pre>
 <p>Run station reproChecks</p>
-<pre class="r"><code>res &lt;- mapply(reproCheck, df_stations$reportedValue, df_stations$obtainedValue, df_stations$valueType)</code></pre>
+<pre class="r"><code>for (row in 1:nrow(df_stations)) {
+  reportObject &lt;- reproCheck(df_stations[row, &quot;reportedValue&quot;], 
+                             df_stations[row, &quot;obtainedValue&quot;],
+                             df_stations[row, &quot;valueType&quot;])
+}</code></pre>
 <pre><code>## [1] &quot;MATCH for p. The reported value (0.001) and the obtained value (0.001) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;
 ## [1] &quot;MATCH for other. The reported value (0.28) and the obtained value (0.28) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;
 ## [1] &quot;MATCH for p. The reported value (0.001) and the obtained value (0.001) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;

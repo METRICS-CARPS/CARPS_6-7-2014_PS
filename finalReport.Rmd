@@ -74,7 +74,12 @@ library(lsr)
 
 ```{r}
 # Prepare report object. This will be updated automatically by the reproCheck function each time values are compared.
-reportObject <- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = NA, valueType = NA, percentageError = NA, comparisonOutcome = NA, eyeballCheck = NA)
+reportObject <- data.frame(dummyRow = TRUE, 
+                           reportedValue = NA, 
+                           obtainedValue = NA, 
+                           valueType = NA, 
+                           percentageError = NA, 
+                           comparisonOutcome = NA, eyeballCheck = NA)
 ```
 
 ## Step 2: Load data
@@ -269,7 +274,11 @@ df_stations <- rbind(df_stations,
 
 Run station reproChecks
 ```{r}
-res <- mapply(reproCheck, df_stations$reportedValue, df_stations$obtainedValue, df_stations$valueType)
+for (row in 1:nrow(df_stations)) {
+  reportObject <- reproCheck(df_stations[row, "reportedValue"], 
+                             df_stations[row, "obtainedValue"],
+                             df_stations[row, "valueType"])
+}
 ```
 
 ## Step 5: Conclusion
