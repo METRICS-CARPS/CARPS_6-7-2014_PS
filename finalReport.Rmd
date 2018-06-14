@@ -53,6 +53,7 @@ stops to the east (Sherbourne, p < .001, ηp2 = .24). Figure 1 summarizes these 
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+options(stringsAsFactors = FALSE)
 ```
 
 ## Step 1: Load packages
@@ -66,7 +67,9 @@ library(haven) # import and export 'SPSS', 'Stata' and 'SAS' Files
 library(readxl) # import excel files
 library(CARPSreports) # custom report functions
 #library(TMB)
-library(sjstats) # computes eta squared for anova 
+#library(sjstats) # computes eta squared for anova 
+# install.packages("sjstats")
+library(lsr)
 ```
 
 ```{r}
@@ -77,7 +80,7 @@ reportObject <- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = 
 ## Step 2: Load data
 
 ```{r}
-d = read_excel("data/S1_Subway.xlsx")
+d <- read_excel ("data/S1_Subway.xlsx")
 ```
 
 ## Step 3: Tidy data
@@ -90,14 +93,14 @@ Data set already in tidy format.
 
 ```{r}
 # make variables factors
-d$DIRECTION = as.factor(d$DIRECTION)
-d$STN_NAME = as.factor(d$STN_NAME)
+d$DIRECTION <- as.factor(d$DIRECTION)
+d$STN_NAME<- as.factor(d$STN_NAME)
 
 # subset dataframes for individual tests 
-BY = subset(d, STN_NAME == "B-Y")
-SHER = subset(d, STN_NAME == "SHER")
-SPAD = subset(d, STN_NAME == "SPAD")
-STG = subset(d, STN_NAME == "STG")
+BY <- subset(d, STN_NAME == "B-Y")
+SHER <- subset(d, STN_NAME == "SHER")
+SPAD <-subset(d, STN_NAME == "SPAD")
+STG<- subset(d, STN_NAME == "STG")
 
 
 #Tried different contrasts to get reported main effect. No success. Same output with different contrasts.
@@ -117,124 +120,156 @@ STG = subset(d, STN_NAME == "STG")
 ```
 
 
-### Descriptive statistics
+# Descriptive statistics
 
 ```{r}
 # Ns for each condition 
 # West should = 101 ; East should = 101
 
-N_cond = d %>%
+N_cond <- d %>%
   group_by(DIRECTION) %>%
   summarise(N = length(DIRECTION))
 
 kable(N_cond) #Ns are correct
 
-summary_STN = d %>%
+summary_STN <- d %>%
   group_by(STN_NAME) %>%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
 kable(summary_STN)
 
-summary_DIRECTION = d %>%
+summary_DIRECTION <- d %>%
   group_by(DIRECTION) %>%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
 kable(summary_DIRECTION) 
 
-summary_int = d %>%
+summary_int <- d %>%
   group_by(STN_NAME, DIRECTION) %>%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
 kable(summary_int) #interaction summary
 ```
 
-### Inferential statistics
+# Inferential statistics
 
-```{r}
+```{r test1}
 # 2 (DIRECTION) X 4 (STATION) ANOVA
-  # reported main effect of STATION: F(3, 194)= 24.10, p < .001
-  # reported interaction: F(3, 194)= 16.28, p < .001
-
+# reported main effect of STATION: F(3, 194)= 24.10, p < .001
+# reported interaction: F(3, 194)= 16.28, p < .001
 t1 <- aov(DISTANCE ~ DIRECTION * STN_NAME, data=d)
 summary(t1)
 
-t1a <- anova(lm(DISTANCE ~ DIRECTION * STN_NAME, data=d))
-t1a #ran same test a different way to double check
+t1_lm <- lm(DISTANCE ~ DIRECTION * STN_NAME, data=d)
+anova(t1_lm)#ran same test a different way to double check
+```
 
+```{r test1 repro check}
 # MAIN EFFECT OBTAINED: F(3, 194)= 23.25, p < .001
 # INTERACTION OBTAINED: SAME
-
-#calculate error
 reportObject <- reproCheck(reportedValue = "24.10", obtainedValue = 23.25, valueType = 'F')
- 
 #MINOR ERROR: 3.53%
+```
 
 
+```{r test 2}
+#reported effect size (main effect of STR_NAME): 0.27
+#reported effect size (STR_NAME X DIRECTION interaction):   0.20
+# etaSQ_t1 = eta_sq(t1)
+# etaSQ_t1 
+kable(etaSquared(t1))
+# etaSQ_t1a = eta_sq(t1a)
+# etaSQ_t1a
+kable(etaSquared(t1_lm))
+```
 
-  #reported effect size (main effect of STR_NAME): 0.27
-  #reported effect size (STR_NAME X DIRECTION interaction):   0.20
+```{r test 2 repro anova check}
+reportObject <- reproCheck(reportedValue = "0.27", obtainedValue = 0.27, valueType = 'other')  # eta squared
+reportObject <- reproCheck(reportedValue = "0.20", obtainedValue = 0.20, valueType = 'other')  # eta squared
+```
 
-etaSQ_t1 = eta_sq(t1)
-etaSQ_t1 
-etaSQ_t1a = eta_sq(t1a)
-etaSQ_t1a
+### Station-specific analyses
 
-# MAIN EFFECT SIZE OBTAINED: 0.22
-# INTERACTION EFFECT SIZE OBTAINED: 0.16
+```{r}
+df_stations <- data.frame()
+```
 
-#calculate error
-reportObject <- reproCheck(reportedValue = "0.27", obtainedValue = 0.22, valueType = 'F')
-
-#MAJOR ERROR OF MAIN EFFECT SIZE: 18.52% 
-
-
-reportObject <- reproCheck(reportedValue = "0.20", obtainedValue = 0.16, valueType = 'F')
-#NO ERROR OF INTERACTION EFFECT SIZE: 0%
-
-
-
-
+St. George
+```{r st george}
 # DISTANCE ~ DIRECTION for each station
 
-  #St. George
-  #reported p < .001
-  #reported effect size = 0.28
+#St. George
+#reported p < .001
+#reported effect size = 0.28
 t2 <- aov(DISTANCE ~ DIRECTION, data=STG)
 summary(t2)
-etaSQ_t2 = eta_sq(t2)
+#obtained p < .001
+etaSQ_t2 <- etaSquared(t2)
 etaSQ_t2 
-  #obtained p < .001
-  #obtained effect size = 0.28
+#obtained effect size = 0.28
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.001", "obtainedValue"=0.001, "valueType"="p", "station"="st george"))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.28", "obtainedValue"=0.28, "valueType"="other", "station"="st george"))
+```
 
-  #Spadina
-  #reported p = .001
-  #reported effect size = 0.20
+Spadina
+```{r spadina}
+#Spadina
+#reported p = .001
+#reported effect size = 0.20
 t3 <- aov(DISTANCE ~ DIRECTION, data=SPAD)
 summary(t3) 
-etaSQ_t3 = eta_sq(t3)
+#obtained p = .001
+etaSQ_t3 = etaSquared(t3)
 etaSQ_t3 
-  #obtained p = .001
-  #obtained effect size = 0.20
+#obtained effect size = 0.20
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.001", "obtainedValue"=0.001, "valueType"="p", "station"="spadina"))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.20", "obtainedValue"=0.20, "valueType"="other", "station"="spadina"))
+```
 
-  #Bloor-Yonge
-  #reported p = .053
-  #reported effect size = 0.08
+Bloor-Yonge
+```{r bloor-yonge}
+#Bloor-Yonge
+#reported p = .053
+#reported effect size = 0.08
 t4 <- aov(DISTANCE ~ DIRECTION, data=BY)
 summary(t4) 
-etaSQ_t4 = eta_sq(t4)
+#obtained p = .053
+etaSQ_t4 = etaSquared(t4)
 etaSQ_t4 
-  #obtained p = .053
-  #obtained effect size = 0.08
+#obtained effect size = 0.08
 
-  #Sherbourne
-  #reported p < .001
-  #reported effect size = 0.24
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.053", "obtainedValue"=0.053, "valueType"="p", "station"="bloor-yonge"))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.08", "obtainedValue"=0.08, "valueType"="other",
+                                "station"="bloor-yonge"))
+```
+
+Sherbourne
+```{r sherbourne}
+#Sherbourne
+#reported p < .001
+#reported effect size = 0.24
 t5 <- aov(DISTANCE ~ DIRECTION, data=SHER)
 summary(t5) 
-etaSQ_t5 = eta_sq(t5)
+#reported p < .001
+etaSQ_t5 = etaSquared(t5)
 etaSQ_t5 
-  #reported p < .001
-  #reported effect size = 0.24
+#reported effect size = 0.24
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.001", "obtainedValue"=0.001, "valueType"="p", "station"="sherbourne"))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.24", "obtainedValue"=0.24, "valueType"="other",
+                                "station"="sherbourne"))
+```
+
+Run station reproChecks
+```{r}
+res <- mapply(reproCheck, df_stations$reportedValue, df_stations$obtainedValue, df_stations$valueType)
 ```
 
 ## Step 5: Conclusion
@@ -243,7 +278,8 @@ Overall, this dataset was well-organized, and it was easy to implement the stati
 
 One conceptual issue that made it tricky to decide how to analyze the data was that the authors classified one of their ANOVA factors as "orientation" with the levels "toward" and "away from," when it appears they actually tested "direction," with the levels "East" and "West." Instead of running a 2 (toward, away from) X 4 (station) ANOVA as they described, they actually ran a 2 (East, West) X 4 (station) ANOVA and then tested whether orientation (toward, away from) influenced distance ratings by assessing differences between East and West groups for each station individually. This was a little confusing to parse out because I think I would have created a separate "orientation" variable and run an ANOVA with that based on their description of the design, but their secondary tests as well as Figure 1, which depicts orientation as "Traveling West" and "Traveling East" instead of "toward" and "away from" clued me in to the fact that they used direction instead of orientation. 
 
-I found one minor and one major error regarding the main effect of Station. The minor error included a 3.73% error on the reported F statistic for the main effect of Station in the 2 (direction) X 4 (station) ANOVA (reported= 24.1, obtained= 23.2). The major error was a 18.54% error on the reported eta squared for the same statistic (reported= 0.27, obtained= 0.22). One issue that should be noted is that I found a discrepancy of similar size in the eta squared for the Direction X Station interaction statistic (reported= 0.20, obtained= 0.16), but the reproCheck() function reported this discrepancy as a match. It might be likely that in the matched statistic 0.16 was rounded to 0.20, whereas in the major error statistic, 0.27 was rounded to 0.30 and 0.22 was rounded to 0.20, causing a larger discrepancy. This raises a question of whether one statistic was incorrectly classified as a match, or the other was incorrectly classified as a major error. 
+
+* `Minor Error`: Main effect of station. 3.73% difference on reported F-statistic. Note that this could be due to rounding.
 
 ```{r}
 Author_Assistance = FALSE # was author assistance provided? (if so, enter TRUE)
@@ -252,13 +288,13 @@ Insufficient_Information_Errors <- 0 # how many discrete insufficient informatio
 
 # Assess the causal locus (discrete reproducibility issues) of any reproducibility errors. Note that there doesn't necessarily have to be a one-to-one correspondance between discrete reproducibility issues and reproducibility errors. For example, it could be that the original article neglects to mention that a Greenhouse-Geisser correct was applied to ANOVA outcomes. This might result in multiple reproducibility errors, but there is a single causal locus (discrete reproducibility issue).
 
-locus_typo <- NA # how many discrete issues did you encounter that related to typographical errors?
-locus_specification <- NA # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
-locus_analysis <- NA # how many discrete issues did you encounter that related to errors in the authors' original analyses?
-locus_data <- NA # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
-locus_unidentified <- NA # how many discrete issues were there for which you could not identify the cause
+locus_typo <- 0 # how many discrete issues did you encounter that related to typographical errors?
+locus_specification <- 0 # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
+locus_analysis <- 0 # how many discrete issues did you encounter that related to errors in the authors' original analyses?
+locus_data <- 0 # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
+locus_unidentified <- 0 # how many discrete issues were there for which you could not identify the cause
 
-Affects_Conclusion <- NA # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
+Affects_Conclusion <- FALSE # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
 ```
 
 ```{r}
