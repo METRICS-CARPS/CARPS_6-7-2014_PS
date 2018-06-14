@@ -1,0 +1,2 @@
+articleID,pilotNames,copilotNames,pilotTTC,copilotTTC,pilotStartDate,copilotStartDate,completionDate,Author_Assistance,finalOutcome,Insufficient_Information_Errors,locus_typo,locus_specification,locus_analysis,locus_data,locus_unidentified
+6-7-2014_PS,"Dawn Finzi, Kiara Sanchez",Ben Peloquin,180,NA,2017-11-02,2020-06-13,NA,FALSE,Failure without author assistance,0,0,0,0,0,0
