@@ -258,7 +258,12 @@ library(CARPSreports) # custom report functions
 # install.packages(&quot;sjstats&quot;)
 library(lsr)</code></pre>
 <pre class="r"><code># Prepare report object. This will be updated automatically by the reproCheck function each time values are compared.
-reportObject &lt;- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = NA, valueType = NA, percentageError = NA, comparisonOutcome = NA, eyeballCheck = NA)</code></pre>
+reportObject &lt;- data.frame(dummyRow = TRUE, 
+                           reportedValue = NA, 
+                           obtainedValue = NA, 
+                           valueType = NA, 
+                           percentageError = NA, 
+                           comparisonOutcome = NA, eyeballCheck = NA)</code></pre>
 </div>
 <div id="step-2-load-data" class="section level2">
 <h2>Step 2: Load data</h2>
@@ -481,10 +486,15 @@ anova(t1_lm)#ran same test a different way to double check</code></pre>
 ## Residuals          194 208.152  1.0729                      
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<pre class="r"><code># MAIN EFFECT OBTAINED: F(3, 194)= 23.25, p &lt; .001
-# INTERACTION OBTAINED: SAME
+<pre class="r"><code># no main effect of orientation
+reportObject &lt;- reproCheck(reportedValue=&quot;&lt;1&quot;, obtainedValue=0.664, valueType = 'F', eyeballCheck=TRUE)</code></pre>
+<pre><code>## [1] &quot;MATCH for F. Eyeball comparison only.&quot;</code></pre>
+<pre class="r"><code># main effect of station
 reportObject &lt;- reproCheck(reportedValue = &quot;24.10&quot;, obtainedValue = 23.25, valueType = 'F')</code></pre>
 <pre><code>## [1] &quot;MINOR_ERROR for F. The reported value (24.1) and the obtained value (23.25) differed by 3.53%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
+<pre class="r"><code># interaction between orientation and station
+reportObject &lt;- reproCheck(reportedValue = &quot;16.28&quot;, obtainedValue = 16.28, valueType = 'F')</code></pre>
+<pre><code>## [1] &quot;MATCH for F. The reported value (16.28) and the obtained value (16.28) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
 <pre class="r"><code>#MINOR ERROR: 3.53%</code></pre>
 <pre class="r"><code>#reported effect size (main effect of STR_NAME): 0.27
 #reported effect size (STR_NAME X DIRECTION interaction):   0.20
@@ -546,9 +556,11 @@ kable(etaSquared(t1_lm))</code></pre>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>reportObject &lt;- reproCheck(reportedValue = &quot;0.27&quot;, obtainedValue = 0.27, valueType = 'other')  # eta squared</code></pre>
+<pre class="r"><code># main effect of station
+reportObject &lt;- reproCheck(reportedValue = &quot;0.27&quot;, obtainedValue = 0.27, valueType = 'other')  # eta squared</code></pre>
 <pre><code>## [1] &quot;MATCH for other. The reported value (0.27) and the obtained value (0.27) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
-<pre class="r"><code>reportObject &lt;- reproCheck(reportedValue = &quot;0.20&quot;, obtainedValue = 0.20, valueType = 'other')  # eta squared</code></pre>
+<pre class="r"><code># interaction between orientation and station
+reportObject &lt;- reproCheck(reportedValue = &quot;0.20&quot;, obtainedValue = 0.20, valueType = 'other')  # eta squared</code></pre>
 <pre><code>## [1] &quot;MATCH for other. The reported value (0.2) and the obtained value (0.2) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
 <div id="station-specific-analyses" class="section level3">
 <h3>Station-specific analyses</h3>
@@ -643,7 +655,11 @@ df_stations &lt;- rbind(df_stations,
                      data.frame(&quot;reportedValue&quot;=&quot;0.24&quot;, &quot;obtainedValue&quot;=0.24, &quot;valueType&quot;=&quot;other&quot;,
                                 &quot;station&quot;=&quot;sherbourne&quot;))</code></pre>
 <p>Run station reproChecks</p>
-<pre class="r"><code>res &lt;- mapply(reproCheck, df_stations$reportedValue, df_stations$obtainedValue, df_stations$valueType)</code></pre>
+<pre class="r"><code>for (row in 1:nrow(df_stations)) {
+  reportObject &lt;- reproCheck(df_stations[row, &quot;reportedValue&quot;], 
+                             df_stations[row, &quot;obtainedValue&quot;],
+                             df_stations[row, &quot;valueType&quot;])
+}</code></pre>
 <pre><code>## [1] &quot;MATCH for p. The reported value (0.001) and the obtained value (0.001) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;
 ## [1] &quot;MATCH for other. The reported value (0.28) and the obtained value (0.28) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;
 ## [1] &quot;MATCH for p. The reported value (0.001) and the obtained value (0.001) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;
@@ -717,7 +733,7 @@ if(reportType == &quot;final&quot;){
 ##  language (EN)                        
 ##  collate  en_US.UTF-8                 
 ##  tz       &lt;NA&gt;                        
-##  date     2018-06-14                  
+##  date     2018-06-15                  
 ## 
 ##  package      * version date      
 ##  assertthat     0.2.0   2017-04-11

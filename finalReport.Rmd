@@ -74,7 +74,12 @@ library(lsr)
 
 ```{r}
 # Prepare report object. This will be updated automatically by the reproCheck function each time values are compared.
-reportObject <- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = NA, valueType = NA, percentageError = NA, comparisonOutcome = NA, eyeballCheck = NA)
+reportObject <- data.frame(dummyRow = TRUE, 
+                           reportedValue = NA, 
+                           obtainedValue = NA, 
+                           valueType = NA, 
+                           percentageError = NA, 
+                           comparisonOutcome = NA, eyeballCheck = NA)
 ```
 
 ## Step 2: Load data
@@ -164,10 +169,13 @@ t1_lm <- lm(DISTANCE ~ DIRECTION * STN_NAME, data=d)
 anova(t1_lm)#ran same test a different way to double check
 ```
 
-```{r test1 repro check}
-# MAIN EFFECT OBTAINED: F(3, 194)= 23.25, p < .001
-# INTERACTION OBTAINED: SAME
+```{r test1 repro check Fs}
+# no main effect of orientation
+reportObject <- reproCheck(reportedValue="<1", obtainedValue=0.664, valueType = 'F', eyeballCheck=TRUE)
+# main effect of station
 reportObject <- reproCheck(reportedValue = "24.10", obtainedValue = 23.25, valueType = 'F')
+# interaction between orientation and station
+reportObject <- reproCheck(reportedValue = "16.28", obtainedValue = 16.28, valueType = 'F')
 #MINOR ERROR: 3.53%
 ```
 
@@ -183,8 +191,10 @@ kable(etaSquared(t1))
 kable(etaSquared(t1_lm))
 ```
 
-```{r test 2 repro anova check}
+```{r test 2 repro check eta2s}
+# main effect of station
 reportObject <- reproCheck(reportedValue = "0.27", obtainedValue = 0.27, valueType = 'other')  # eta squared
+# interaction between orientation and station
 reportObject <- reproCheck(reportedValue = "0.20", obtainedValue = 0.20, valueType = 'other')  # eta squared
 ```
 
@@ -269,7 +279,11 @@ df_stations <- rbind(df_stations,
 
 Run station reproChecks
 ```{r}
-res <- mapply(reproCheck, df_stations$reportedValue, df_stations$obtainedValue, df_stations$valueType)
+for (row in 1:nrow(df_stations)) {
+  reportObject <- reproCheck(df_stations[row, "reportedValue"], 
+                             df_stations[row, "obtainedValue"],
+                             df_stations[row, "valueType"])
+}
 ```
 
 ## Step 5: Conclusion
