@@ -487,8 +487,9 @@ anova(t1_lm)#ran same test a different way to double check</code></pre>
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre class="r"><code># no main effect of orientation
-# reportObject &lt;- reproCheck(reportedValue=&quot;&lt;1&quot;, obtainedValue=0.664, valueType = 'F')
-# main effect of station
+reportObject &lt;- reproCheck(reportedValue=&quot;&lt;1&quot;, obtainedValue=0.664, valueType = 'F', eyeballCheck=TRUE)</code></pre>
+<pre><code>## [1] &quot;MATCH for F. Eyeball comparison only.&quot;</code></pre>
+<pre class="r"><code># main effect of station
 reportObject &lt;- reproCheck(reportedValue = &quot;24.10&quot;, obtainedValue = 23.25, valueType = 'F')</code></pre>
 <pre><code>## [1] &quot;MINOR_ERROR for F. The reported value (24.1) and the obtained value (23.25) differed by 3.53%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
 <pre class="r"><code># interaction between orientation and station
@@ -732,7 +733,7 @@ if(reportType == &quot;final&quot;){
 ##  language (EN)                        
 ##  collate  en_US.UTF-8                 
 ##  tz       &lt;NA&gt;                        
-##  date     2018-06-14                  
+##  date     2018-06-15                  
 ## 
 ##  package      * version date      
 ##  assertthat     0.2.0   2017-04-11

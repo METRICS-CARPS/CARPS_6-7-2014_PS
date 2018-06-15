@@ -171,7 +171,7 @@ anova(t1_lm)#ran same test a different way to double check
 
 ```{r test1 repro check Fs}
 # no main effect of orientation
-# reportObject <- reproCheck(reportedValue="<1", obtainedValue=0.664, valueType = 'F')
+reportObject <- reproCheck(reportedValue="<1", obtainedValue=0.664, valueType = 'F', eyeballCheck=TRUE)
 # main effect of station
 reportObject <- reproCheck(reportedValue = "24.10", obtainedValue = 23.25, valueType = 'F')
 # interaction between orientation and station
