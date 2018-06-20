@@ -285,36 +285,20 @@ d$STN_NAME&lt;- as.factor(d$STN_NAME)
 BY &lt;- subset(d, STN_NAME == &quot;B-Y&quot;)
 SHER &lt;- subset(d, STN_NAME == &quot;SHER&quot;)
 SPAD &lt;-subset(d, STN_NAME == &quot;SPAD&quot;)
-STG&lt;- subset(d, STN_NAME == &quot;STG&quot;)
-
-
-#Tried different contrasts to get reported main effect. No success. Same output with different contrasts.
-
-# set levels
-#d$STN_NAME = factor(d$STN_NAME,levels = c('SPAD', 'STG', 'B-Y', 'SHER'))
-
-#backward difference coding
-#contrasts(d$STN_NAME) = cbind(C1=c(-.75, .25, .25, .25), 
-                           #C2=c(-.5, -.5, .5, .5),
-                           #C3=c(-.25, -.25, -.25, .75)); contrasts(d$STN_NAME)
-
-#other coding schemes
-#contrasts(d$STN_NAME) = cbind(C1=c(-1, 1, 0, 0), 
-                           #C2=c(0, 1, -1, 0),
-                           #C3=c(-0, 0, 1, -1)); contrasts(d$STN_NAME)</code></pre>
+STG&lt;- subset(d, STN_NAME == &quot;STG&quot;)</code></pre>
 </div>
 </div>
 <div id="descriptive-statistics" class="section level1">
 <h1>Descriptive statistics</h1>
 <pre class="r"><code># Ns for each condition 
 # West should = 101 ; East should = 101
-
 N_cond &lt;- d %&gt;%
   group_by(DIRECTION) %&gt;%
   summarise(N = length(DIRECTION))
 
-kable(N_cond) #Ns are correct</code></pre>
+kable(N_cond, caption=&quot;Sample sizes&quot;) #Ns are correct</code></pre>
 <table>
+<caption>Sample sizes</caption>
 <thead>
 <tr class="header">
 <th align="left">DIRECTION</th>
@@ -336,8 +320,9 @@ kable(N_cond) #Ns are correct</code></pre>
   group_by(STN_NAME) %&gt;%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
-kable(summary_STN)</code></pre>
+kable(summary_STN, caption=&quot;Distance by station&quot;)</code></pre>
 <table>
+<caption>Distance by station</caption>
 <thead>
 <tr class="header">
 <th align="left">STN_NAME</th>
@@ -372,8 +357,9 @@ kable(summary_STN)</code></pre>
   group_by(DIRECTION) %&gt;%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
-kable(summary_DIRECTION) </code></pre>
+kable(summary_DIRECTION, caption=&quot;Distance by direction&quot;) </code></pre>
 <table>
+<caption>Distance by direction</caption>
 <thead>
 <tr class="header">
 <th align="left">DIRECTION</th>
@@ -398,8 +384,9 @@ kable(summary_DIRECTION) </code></pre>
   group_by(STN_NAME, DIRECTION) %&gt;%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
-kable(summary_int) #interaction summary</code></pre>
+kable(summary_int, caption=&quot;Interaction summary&quot;) #interaction summary</code></pre>
 <table>
+<caption>Interaction summary</caption>
 <thead>
 <tr class="header">
 <th align="left">STN_NAME</th>
@@ -466,7 +453,8 @@ kable(summary_int) #interaction summary</code></pre>
 # reported main effect of STATION: F(3, 194)= 24.10, p &lt; .001
 # reported interaction: F(3, 194)= 16.28, p &lt; .001
 t1 &lt;- aov(DISTANCE ~ DIRECTION * STN_NAME, data=d)
-summary(t1)</code></pre>
+t1_summary &lt;- summary(t1)
+t1_summary</code></pre>
 <pre><code>##                     Df Sum Sq Mean Sq F value   Pr(&gt;F)    
 ## DIRECTION            1   0.71   0.713   0.664    0.416    
 ## STN_NAME             3  75.16  25.053  23.349 6.01e-13 ***
@@ -474,34 +462,26 @@ summary(t1)</code></pre>
 ## Residuals          194 208.15   1.073                     
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<pre class="r"><code>t1_lm &lt;- lm(DISTANCE ~ DIRECTION * STN_NAME, data=d)
-anova(t1_lm)#ran same test a different way to double check</code></pre>
-<pre><code>## Analysis of Variance Table
-## 
-## Response: DISTANCE
-##                     Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
-## DIRECTION            1   0.713  0.7129  0.6644     0.416    
-## STN_NAME             3  75.158 25.0525 23.3492 6.011e-13 ***
-## DIRECTION:STN_NAME   3  52.413 17.4710 16.2832 1.765e-09 ***
-## Residuals          194 208.152  1.0729                      
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<pre class="r"><code># no main effect of orientation
-reportObject &lt;- reproCheck(reportedValue=&quot;&lt;1&quot;, obtainedValue=0.664, valueType = 'F', eyeballCheck=TRUE)</code></pre>
+<pre class="r"><code># Test main effect of orientation
+reportObject &lt;- reproCheck(reportedValue=&quot;&lt;1&quot;, 
+                           obtainedValue=t1_summary[[1]]$`F value`[1], 
+                           valueType = 'F', 
+                           eyeballCheck=TRUE)</code></pre>
 <pre><code>## [1] &quot;MATCH for F. Eyeball comparison only.&quot;</code></pre>
-<pre class="r"><code># main effect of station
-reportObject &lt;- reproCheck(reportedValue = &quot;24.10&quot;, obtainedValue = 23.25, valueType = 'F')</code></pre>
-<pre><code>## [1] &quot;MINOR_ERROR for F. The reported value (24.1) and the obtained value (23.25) differed by 3.53%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
-<pre class="r"><code># interaction between orientation and station
-reportObject &lt;- reproCheck(reportedValue = &quot;16.28&quot;, obtainedValue = 16.28, valueType = 'F')</code></pre>
+<pre class="r"><code># Test main effect of station
+reportObject &lt;- reproCheck(reportedValue=&quot;24.10&quot;, 
+                           obtainedValue=t1_summary[[1]]$`F value`[2], 
+                           valueType = 'F')</code></pre>
+<pre><code>## [1] &quot;MINOR_ERROR for F. The reported value (24.1) and the obtained value (23.35) differed by 3.11%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
+<pre class="r"><code># Test interaction between orientation and station
+reportObject &lt;- reproCheck(reportedValue=&quot;16.28&quot;, 
+                           obtainedValue=t1_summary[[1]]$`F value`[3], 
+                           valueType='F')</code></pre>
 <pre><code>## [1] &quot;MATCH for F. The reported value (16.28) and the obtained value (16.28) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
-<pre class="r"><code>#MINOR ERROR: 3.53%</code></pre>
-<pre class="r"><code>#reported effect size (main effect of STR_NAME): 0.27
-#reported effect size (STR_NAME X DIRECTION interaction):   0.20
-# etaSQ_t1 = eta_sq(t1)
-# etaSQ_t1 
-kable(etaSquared(t1))</code></pre>
+<pre class="r"><code>eta2 &lt;- etaSquared(t1)
+kable(eta2, caption=&quot;Partial eta squared&quot;)</code></pre>
 <table>
+<caption>Partial eta squared</caption>
 <thead>
 <tr class="header">
 <th></th>
@@ -527,146 +507,82 @@ kable(etaSquared(t1))</code></pre>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># etaSQ_t1a = eta_sq(t1a)
-# etaSQ_t1a
-kable(etaSquared(t1_lm))</code></pre>
-<table>
-<thead>
-<tr class="header">
-<th></th>
-<th align="right">eta.sq</th>
-<th align="right">eta.sq.part</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>DIRECTION</td>
-<td align="right">0.0011960</td>
-<td align="right">0.0019293</td>
-</tr>
-<tr class="even">
-<td>STN_NAME</td>
-<td align="right">0.2233935</td>
-<td align="right">0.2652841</td>
-</tr>
-<tr class="odd">
-<td>DIRECTION:STN_NAME</td>
-<td align="right">0.1557894</td>
-<td align="right">0.2011516</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code># main effect of station
-reportObject &lt;- reproCheck(reportedValue = &quot;0.27&quot;, obtainedValue = 0.27, valueType = 'other')  # eta squared</code></pre>
+<pre class="r"><code>station_p_eta2 &lt;- eta2[5]
+interaction_p_eta2 &lt;- eta2[6]
+# Test main effect of station
+reportObject &lt;- reproCheck(reportedValue = &quot;0.27&quot;, obtainedValue = station_p_eta2, valueType = 'other')  # eta squared</code></pre>
 <pre><code>## [1] &quot;MATCH for other. The reported value (0.27) and the obtained value (0.27) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
-<pre class="r"><code># interaction between orientation and station
-reportObject &lt;- reproCheck(reportedValue = &quot;0.20&quot;, obtainedValue = 0.20, valueType = 'other')  # eta squared</code></pre>
+<pre class="r"><code># Test interaction between orientation and station
+reportObject &lt;- reproCheck(reportedValue = &quot;0.20&quot;, obtainedValue = interaction_p_eta2, valueType = 'other')  # eta squared</code></pre>
 <pre><code>## [1] &quot;MATCH for other. The reported value (0.2) and the obtained value (0.2) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
 <div id="station-specific-analyses" class="section level3">
 <h3>Station-specific analyses</h3>
-<pre class="r"><code>df_stations &lt;- data.frame()</code></pre>
-<p>St. George</p>
-<pre class="r"><code># DISTANCE ~ DIRECTION for each station
-
-#St. George
-#reported p &lt; .001
-#reported effect size = 0.28
+<div id="st.george" class="section level4">
+<h4>St. George</h4>
+<pre class="r"><code>#St. George
 t2 &lt;- aov(DISTANCE ~ DIRECTION, data=STG)
-summary(t2)</code></pre>
+t2_summary &lt;- summary(t2); t2_summary</code></pre>
 <pre><code>##             Df Sum Sq Mean Sq F value   Pr(&gt;F)    
 ## DIRECTION    1  16.25  16.252   18.79 7.23e-05 ***
 ## Residuals   49  42.38   0.865                     
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<pre class="r"><code>#obtained p &lt; .001
-etaSQ_t2 &lt;- etaSquared(t2)
-etaSQ_t2 </code></pre>
+<pre class="r"><code>etaSQ_t2 &lt;- etaSquared(t2); etaSQ_t2</code></pre>
 <pre><code>##              eta.sq eta.sq.part
 ## DIRECTION 0.2772092   0.2772092</code></pre>
-<pre class="r"><code>#obtained effect size = 0.28
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.001&quot;, &quot;obtainedValue&quot;=0.001, &quot;valueType&quot;=&quot;p&quot;, &quot;station&quot;=&quot;st george&quot;))
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.28&quot;, &quot;obtainedValue&quot;=0.28, &quot;valueType&quot;=&quot;other&quot;, &quot;station&quot;=&quot;st george&quot;))</code></pre>
-<p>Spadina</p>
+</div>
+<div id="spadina" class="section level4">
+<h4>Spadina</h4>
 <pre class="r"><code>#Spadina
-#reported p = .001
-#reported effect size = 0.20
 t3 &lt;- aov(DISTANCE ~ DIRECTION, data=SPAD)
-summary(t3) </code></pre>
+t3_summary &lt;- summary(t3); t3_summary</code></pre>
 <pre><code>##             Df Sum Sq Mean Sq F value  Pr(&gt;F)   
 ## DIRECTION    1  13.10  13.100   11.97 0.00113 **
 ## Residuals   49  53.64   1.095                   
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<pre class="r"><code>#obtained p = .001
-etaSQ_t3 = etaSquared(t3)
-etaSQ_t3 </code></pre>
+<pre class="r"><code>etaSQ_t3 = etaSquared(t3); etaSQ_t3 </code></pre>
 <pre><code>##              eta.sq eta.sq.part
 ## DIRECTION 0.1962763   0.1962763</code></pre>
-<pre class="r"><code>#obtained effect size = 0.20
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.001&quot;, &quot;obtainedValue&quot;=0.001, &quot;valueType&quot;=&quot;p&quot;, &quot;station&quot;=&quot;spadina&quot;))
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.20&quot;, &quot;obtainedValue&quot;=0.20, &quot;valueType&quot;=&quot;other&quot;, &quot;station&quot;=&quot;spadina&quot;))</code></pre>
-<p>Bloor-Yonge</p>
+</div>
+<div id="bloor-yonge" class="section level4">
+<h4>Bloor-Yonge</h4>
 <pre class="r"><code>#Bloor-Yonge
-#reported p = .053
-#reported effect size = 0.08
 t4 &lt;- aov(DISTANCE ~ DIRECTION, data=BY)
-summary(t4) </code></pre>
+t4_summary &lt;- summary(t4); t4_summary</code></pre>
 <pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)  
 ## DIRECTION    1   4.16   4.157   3.945 0.0528 .
 ## Residuals   47  49.52   1.054                 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<pre class="r"><code>#obtained p = .053
-etaSQ_t4 = etaSquared(t4)
-etaSQ_t4 </code></pre>
+<pre class="r"><code>etaSQ_t4 = etaSquared(t4); etaSQ_t4</code></pre>
 <pre><code>##              eta.sq eta.sq.part
 ## DIRECTION 0.0774451   0.0774451</code></pre>
-<pre class="r"><code>#obtained effect size = 0.08
-
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.053&quot;, &quot;obtainedValue&quot;=0.053, &quot;valueType&quot;=&quot;p&quot;, &quot;station&quot;=&quot;bloor-yonge&quot;))
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.08&quot;, &quot;obtainedValue&quot;=0.08, &quot;valueType&quot;=&quot;other&quot;,
-                                &quot;station&quot;=&quot;bloor-yonge&quot;))</code></pre>
-<p>Sherbourne</p>
+</div>
+<div id="sherbourne" class="section level4">
+<h4>Sherbourne</h4>
 <pre class="r"><code>#Sherbourne
-#reported p &lt; .001
-#reported effect size = 0.24
 t5 &lt;- aov(DISTANCE ~ DIRECTION, data=SHER)
-summary(t5) </code></pre>
+t5_summary &lt;- summary(t5); t5_summary</code></pre>
 <pre><code>##             Df Sum Sq Mean Sq F value   Pr(&gt;F)    
 ## DIRECTION    1  19.31  19.306   15.11 0.000305 ***
 ## Residuals   49  62.62   1.278                     
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<pre class="r"><code>#reported p &lt; .001
-etaSQ_t5 = etaSquared(t5)
-etaSQ_t5 </code></pre>
+<pre class="r"><code>etaSQ_t5 = etaSquared(t5); etaSQ_t5 </code></pre>
 <pre><code>##              eta.sq eta.sq.part
 ## DIRECTION 0.2356667   0.2356667</code></pre>
-<pre class="r"><code>#reported effect size = 0.24
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.001&quot;, &quot;obtainedValue&quot;=0.001, &quot;valueType&quot;=&quot;p&quot;, &quot;station&quot;=&quot;sherbourne&quot;))
-df_stations &lt;- rbind(df_stations, 
-                     data.frame(&quot;reportedValue&quot;=&quot;0.24&quot;, &quot;obtainedValue&quot;=0.24, &quot;valueType&quot;=&quot;other&quot;,
-                                &quot;station&quot;=&quot;sherbourne&quot;))</code></pre>
-<p>Run station reproChecks</p>
-<pre class="r"><code>for (row in 1:nrow(df_stations)) {
-  reportObject &lt;- reproCheck(df_stations[row, &quot;reportedValue&quot;], 
-                             df_stations[row, &quot;obtainedValue&quot;],
-                             df_stations[row, &quot;valueType&quot;])
-}</code></pre>
-<pre><code>## [1] &quot;MATCH for p. The reported value (0.001) and the obtained value (0.001) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;
+</div>
+</div>
+<div id="run-station-reprochecks" class="section level3">
+<h3>Run station reproChecks</h3>
+<pre><code>## [1] &quot;MATCH for p. Eyeball comparison only.&quot;
 ## [1] &quot;MATCH for other. The reported value (0.28) and the obtained value (0.28) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;
 ## [1] &quot;MATCH for p. The reported value (0.001) and the obtained value (0.001) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;
 ## [1] &quot;MATCH for other. The reported value (0.2) and the obtained value (0.2) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;
 ## [1] &quot;MATCH for p. The reported value (0.053) and the obtained value (0.053) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;
 ## [1] &quot;MATCH for other. The reported value (0.08) and the obtained value (0.08) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;
-## [1] &quot;MATCH for p. The reported value (0.001) and the obtained value (0.001) differed by 0%. NB obtained value was rounded to 3 decimal places.&quot;
+## [1] &quot;MATCH for p. Eyeball comparison only.&quot;
 ## [1] &quot;MATCH for other. The reported value (0.24) and the obtained value (0.24) differed by 0%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
 </div>
 <div id="step-5-conclusion" class="section level2">
@@ -733,14 +649,14 @@ if(reportType == &quot;final&quot;){
 ##  language (EN)                        
 ##  collate  en_US.UTF-8                 
 ##  tz       &lt;NA&gt;                        
-##  date     2018-06-15                  
+##  date     2018-06-20                  
 ## 
 ##  package      * version date      
 ##  assertthat     0.2.0   2017-04-11
 ##  backports      1.1.2   2017-12-13
 ##  base         * 3.4.1   2017-07-07
-##  bindr          0.1     2016-11-13
-##  bindrcpp     * 0.2     2017-06-17
+##  bindr          0.1.1   2018-03-13
+##  bindrcpp     * 0.2.2   2018-03-29
 ##  broom          0.4.2   2017-02-13
 ##  CARPSreports * 0.1     2018-06-13
 ##  cellranger     1.1.0   2016-07-27
@@ -751,7 +667,7 @@ if(reportType == &quot;final&quot;){
 ##  datasets     * 3.4.1   2017-07-07
 ##  devtools       1.13.5  2018-02-18
 ##  digest         0.6.14  2018-01-14
-##  dplyr        * 0.7.4   2017-09-28
+##  dplyr        * 0.7.5   2018-05-19
 ##  evaluate       0.10.1  2017-06-24
 ##  forcats      * 0.2.0   2017-01-23
 ##  foreign        0.8-69  2017-06-22
@@ -769,7 +685,7 @@ if(reportType == &quot;final&quot;){
 ##  jsonlite       1.5     2017-06-01
 ##  knitr        * 1.20    2018-02-20
 ##  lattice        0.20-35 2017-03-25
-##  lazyeval       0.2.0   2016-06-12
+##  lazyeval       0.2.1   2017-10-29
 ##  lsr          * 0.5     2015-03-02
 ##  lubridate      1.7.1   2017-11-03
 ##  magrittr       1.5     2014-11-22
@@ -784,35 +700,36 @@ if(reportType == &quot;final&quot;){
 ##  pkgconfig      2.0.1   2017-03-21
 ##  plyr           1.8.4   2016-06-08
 ##  psych          1.7.8   2017-09-09
-##  purrr        * 0.2.4   2017-10-18
+##  purrr        * 0.2.5   2018-05-29
 ##  R6             2.2.2   2017-06-17
 ##  Rcpp           0.12.17 2018-05-18
 ##  readr        * 1.1.1   2017-05-16
 ##  readxl       * 1.1.0   2018-04-20
 ##  reshape2       1.4.2   2016-10-22
-##  rlang          0.2.0   2018-02-20
+##  rlang          0.2.1   2018-05-30
 ##  rmarkdown      1.9     2018-03-01
 ##  rprojroot      1.3-2   2018-01-03
 ##  rstudioapi     0.7     2017-09-07
 ##  rvest          0.3.2   2016-06-17
 ##  scales         0.5.0   2017-08-24
 ##  stats        * 3.4.1   2017-07-07
-##  stringi        1.1.7   2018-03-12
-##  stringr      * 1.3.0   2018-02-19
+##  stringi        1.2.2   2018-05-02
+##  stringr      * 1.3.1   2018-05-10
 ##  tibble       * 1.4.2   2018-01-22
 ##  tidyr        * 0.7.2   2017-10-16
+##  tidyselect     0.2.4   2018-02-26
 ##  tidyverse    * 1.2.1   2017-11-14
 ##  tools          3.4.1   2017-07-07
 ##  utils        * 3.4.1   2017-07-07
 ##  withr          2.1.1   2017-12-19
 ##  xml2           1.1.1   2017-01-24
-##  yaml           2.1.18  2018-03-08
+##  yaml           2.1.19  2018-05-01
 ##  source                                     
 ##  CRAN (R 3.4.0)                             
 ##  cran (@1.1.2)                              
 ##  local                                      
-##  CRAN (R 3.4.0)                             
-##  CRAN (R 3.4.0)                             
+##  cran (@0.1.1)                              
+##  cran (@0.2.2)                              
 ##  CRAN (R 3.4.0)                             
 ##  Github (METRICS-CARPS/CARPSreports@95b6979)
 ##  CRAN (R 3.4.0)                             
@@ -823,7 +740,7 @@ if(reportType == &quot;final&quot;){
 ##  local                                      
 ##  CRAN (R 3.4.3)                             
 ##  cran (@0.6.14)                             
-##  cran (@0.7.4)                              
+##  cran (@0.7.5)                              
 ##  CRAN (R 3.4.1)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.1)                             
@@ -841,7 +758,7 @@ if(reportType == &quot;final&quot;){
 ##  CRAN (R 3.4.0)                             
 ##  cran (@1.20)                               
 ##  CRAN (R 3.4.1)                             
-##  CRAN (R 3.4.0)                             
+##  cran (@0.2.1)                              
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.0)                             
@@ -856,29 +773,30 @@ if(reportType == &quot;final&quot;){
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.1)                             
-##  CRAN (R 3.4.2)                             
+##  cran (@0.2.5)                              
 ##  CRAN (R 3.4.0)                             
 ##  cran (@0.12.17)                            
 ##  CRAN (R 3.4.0)                             
 ##  cran (@1.1.0)                              
 ##  CRAN (R 3.4.0)                             
-##  CRAN (R 3.4.3)                             
+##  cran (@0.2.1)                              
 ##  cran (@1.9)                                
 ##  cran (@1.3-2)                              
 ##  CRAN (R 3.4.1)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.1)                             
 ##  local                                      
-##  cran (@1.1.7)                              
-##  cran (@1.3.0)                              
+##  cran (@1.2.2)                              
+##  cran (@1.3.1)                              
 ##  CRAN (R 3.4.3)                             
 ##  cran (@0.7.2)                              
+##  cran (@0.2.4)                              
 ##  CRAN (R 3.4.2)                             
 ##  local                                      
 ##  local                                      
 ##  cran (@2.1.1)                              
 ##  CRAN (R 3.4.0)                             
-##  cran (@2.1.18)</code></pre>
+##  cran (@2.1.19)</code></pre>
 </div>
 
 
