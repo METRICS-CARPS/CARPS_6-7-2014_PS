@@ -106,8 +106,10 @@ BY <- subset(d, STN_NAME == "B-Y")
 SHER <- subset(d, STN_NAME == "SHER")
 SPAD <-subset(d, STN_NAME == "SPAD")
 STG<- subset(d, STN_NAME == "STG")
+```
 
-
+```{r save-old-code, eval=FALSE, echo=FALSE}
+# Save below
 #Tried different contrasts to get reported main effect. No success. Same output with different contrasts.
 
 # set levels
@@ -127,33 +129,32 @@ STG<- subset(d, STN_NAME == "STG")
 
 # Descriptive statistics
 
-```{r}
+```{r descriptive-stats, message=FALSE}
 # Ns for each condition 
 # West should = 101 ; East should = 101
-
 N_cond <- d %>%
   group_by(DIRECTION) %>%
   summarise(N = length(DIRECTION))
 
-kable(N_cond) #Ns are correct
+kable(N_cond, caption="Sample sizes") #Ns are correct
 
 summary_STN <- d %>%
   group_by(STN_NAME) %>%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
-kable(summary_STN)
+kable(summary_STN, caption="Distance by station")
 
 summary_DIRECTION <- d %>%
   group_by(DIRECTION) %>%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
-kable(summary_DIRECTION) 
+kable(summary_DIRECTION, caption="Distance by direction") 
 
 summary_int <- d %>%
   group_by(STN_NAME, DIRECTION) %>%
   summarise(mean_distance = mean(DISTANCE), 
             sd_distance = sd(DISTANCE))
-kable(summary_int) #interaction summary
+kable(summary_int, caption="Interaction summary") #interaction summary
 ```
 
 # Inferential statistics
@@ -163,126 +164,154 @@ kable(summary_int) #interaction summary
 # reported main effect of STATION: F(3, 194)= 24.10, p < .001
 # reported interaction: F(3, 194)= 16.28, p < .001
 t1 <- aov(DISTANCE ~ DIRECTION * STN_NAME, data=d)
-summary(t1)
-
-t1_lm <- lm(DISTANCE ~ DIRECTION * STN_NAME, data=d)
-anova(t1_lm)#ran same test a different way to double check
+t1_summary <- summary(t1)
+t1_summary
 ```
 
-```{r test1 repro check Fs}
-# no main effect of orientation
-reportObject <- reproCheck(reportedValue="<1", obtainedValue=0.664, valueType = 'F', eyeballCheck=TRUE)
-# main effect of station
-reportObject <- reproCheck(reportedValue = "24.10", obtainedValue = 23.25, valueType = 'F')
-# interaction between orientation and station
-reportObject <- reproCheck(reportedValue = "16.28", obtainedValue = 16.28, valueType = 'F')
-#MINOR ERROR: 3.53%
+```{r test1-repro-check-Fs}
+# Test main effect of orientation
+reportObject <- reproCheck(reportedValue="<1", 
+                           obtainedValue=t1_summary[[1]]$`F value`[1], 
+                           valueType = 'F', 
+                           eyeballCheck=TRUE)
+# Test main effect of station
+reportObject <- reproCheck(reportedValue="24.10", 
+                           obtainedValue=t1_summary[[1]]$`F value`[2], 
+                           valueType = 'F')
+# Test interaction between orientation and station
+reportObject <- reproCheck(reportedValue="16.28", 
+                           obtainedValue=t1_summary[[1]]$`F value`[3], 
+                           valueType='F')
 ```
 
 
-```{r test 2}
-#reported effect size (main effect of STR_NAME): 0.27
-#reported effect size (STR_NAME X DIRECTION interaction):   0.20
-# etaSQ_t1 = eta_sq(t1)
-# etaSQ_t1 
-kable(etaSquared(t1))
-# etaSQ_t1a = eta_sq(t1a)
-# etaSQ_t1a
-kable(etaSquared(t1_lm))
+```{r test-2-eta-sq}
+eta2 <- etaSquared(t1)
+kable(eta2, caption="Partial eta squared")
 ```
 
 ```{r test 2 repro check eta2s}
-# main effect of station
-reportObject <- reproCheck(reportedValue = "0.27", obtainedValue = 0.27, valueType = 'other')  # eta squared
-# interaction between orientation and station
-reportObject <- reproCheck(reportedValue = "0.20", obtainedValue = 0.20, valueType = 'other')  # eta squared
+station_p_eta2 <- eta2[5]
+interaction_p_eta2 <- eta2[6]
+# Test main effect of station
+reportObject <- reproCheck(reportedValue = "0.27", obtainedValue = station_p_eta2, valueType = 'other')  # eta squared
+# Test interaction between orientation and station
+reportObject <- reproCheck(reportedValue = "0.20", obtainedValue = interaction_p_eta2, valueType = 'other')  # eta squared
 ```
 
 ### Station-specific analyses
 
-```{r}
+```{r echo=FALSE, data-hold}
+# DISTANCE ~ DIRECTION for each station
 df_stations <- data.frame()
 ```
 
-St. George
-```{r st george}
-# DISTANCE ~ DIRECTION for each station
-
+#### St. George
+```{r st-george}
 #St. George
-#reported p < .001
-#reported effect size = 0.28
 t2 <- aov(DISTANCE ~ DIRECTION, data=STG)
-summary(t2)
-#obtained p < .001
-etaSQ_t2 <- etaSquared(t2)
-etaSQ_t2 
-#obtained effect size = 0.28
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.001", "obtainedValue"=0.001, "valueType"="p", "station"="st george"))
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.28", "obtainedValue"=0.28, "valueType"="other", "station"="st george"))
+t2_summary <- summary(t2); t2_summary
+etaSQ_t2 <- etaSquared(t2); etaSQ_t2
 ```
 
-Spadina
+```{r st-george-cache, echo=FALSE}
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="<0.001",
+                                "obtainedValue"=t2_summary[[1]]$`Pr(>F)`[1], 
+                                "valueType"="p", 
+                                "station"="st george",
+                                "eyeballCheck"=TRUE))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.28", 
+                                "obtainedValue"=0.28, 
+                                "valueType"="other", 
+                                "station"="st george",
+                                "eyeballCheck"=NA))
+```
+
+#### Spadina
 ```{r spadina}
 #Spadina
-#reported p = .001
-#reported effect size = 0.20
 t3 <- aov(DISTANCE ~ DIRECTION, data=SPAD)
-summary(t3) 
-#obtained p = .001
-etaSQ_t3 = etaSquared(t3)
-etaSQ_t3 
-#obtained effect size = 0.20
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.001", "obtainedValue"=0.001, "valueType"="p", "station"="spadina"))
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.20", "obtainedValue"=0.20, "valueType"="other", "station"="spadina"))
+t3_summary <- summary(t3); t3_summary
+etaSQ_t3 = etaSquared(t3); etaSQ_t3 
 ```
 
-Bloor-Yonge
+```{r spadina-cache, echo=FALSE}
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.001", 
+                                "obtainedValue"=t3_summary[[1]]$`Pr(>F)`[1],
+                                "valueType"="p", 
+                                "station"="spadina",
+                                "eyeballCheck"=NA))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.20", 
+                                "obtainedValue"=etaSQ_t3[2], 
+                                "valueType"="other", 
+                                "station"="spadina",
+                                "eyeballCheck"=NA))
+```
+
+#### Bloor-Yonge
 ```{r bloor-yonge}
 #Bloor-Yonge
-#reported p = .053
-#reported effect size = 0.08
 t4 <- aov(DISTANCE ~ DIRECTION, data=BY)
-summary(t4) 
-#obtained p = .053
-etaSQ_t4 = etaSquared(t4)
-etaSQ_t4 
-#obtained effect size = 0.08
-
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.053", "obtainedValue"=0.053, "valueType"="p", "station"="bloor-yonge"))
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.08", "obtainedValue"=0.08, "valueType"="other",
-                                "station"="bloor-yonge"))
+t4_summary <- summary(t4); t4_summary
+etaSQ_t4 = etaSquared(t4); etaSQ_t4
 ```
 
-Sherbourne
+```{r bloor-yonge-cache, echo=FALSE}
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.053", 
+                                "obtainedValue"=t4_summary[[1]]$`Pr(>F)`[1],
+                                "valueType"="p", 
+                                "station"="bloor-yonge",
+                                "eyeballCheck"=NA))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.08", 
+                                "obtainedValue"=etaSQ_t4[2], 
+                                "valueType"="other",
+                                "station"="bloor-yonge",
+                                "eyeballCheck"=NA))
+```
+
+#### Sherbourne
 ```{r sherbourne}
 #Sherbourne
-#reported p < .001
-#reported effect size = 0.24
 t5 <- aov(DISTANCE ~ DIRECTION, data=SHER)
-summary(t5) 
-#reported p < .001
-etaSQ_t5 = etaSquared(t5)
-etaSQ_t5 
-#reported effect size = 0.24
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.001", "obtainedValue"=0.001, "valueType"="p", "station"="sherbourne"))
-df_stations <- rbind(df_stations, 
-                     data.frame("reportedValue"="0.24", "obtainedValue"=0.24, "valueType"="other",
-                                "station"="sherbourne"))
+t5_summary <- summary(t5); t5_summary
+etaSQ_t5 = etaSquared(t5); etaSQ_t5 
 ```
 
-Run station reproChecks
-```{r}
+```{r sherbourne-cache, echo=FALSE}
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="<0.001", 
+                                "obtainedValue"=t5_summary[[1]]$`Pr(>F)`[1],
+                                "valueType"="p", 
+                                "station"="sherbourne",
+                                "eyeballCheck"=TRUE))
+df_stations <- rbind(df_stations, 
+                     data.frame("reportedValue"="0.24", 
+                                "obtainedValue"=etaSQ_t5[2], 
+                                "valueType"="other",
+                                "station"="sherbourne",
+                                "eyeballCheck"=NA))
+```
+
+### Run station reproChecks
+```{r get-data, echo=FALSE}
 for (row in 1:nrow(df_stations)) {
-  reportObject <- reproCheck(df_stations[row, "reportedValue"], 
+  if (!is.na(df_stations[row, "eyeballCheck"])) {
+    reportObject <- reproCheck(df_stations[row, "reportedValue"], 
+                             df_stations[row, "obtainedValue"],
+                             df_stations[row, "valueType"],
+                             df_stations[row, "eyeballCheck"],)
+    
+  } else {
+    reportObject <- reproCheck(df_stations[row, "reportedValue"], 
                              df_stations[row, "obtainedValue"],
                              df_stations[row, "valueType"])
+  }
 }
 ```
 
