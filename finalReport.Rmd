@@ -62,7 +62,11 @@ library(knitr) # for kable table formating
 library(haven) # import and export 'SPSS', 'Stata' and 'SAS' Files
 library(readxl) # import excel files
 library(CARPSreports) # custom report functions
-library(lsr) # for cohens d
+#library(TMB)
+#library(sjstats) # computes eta squared for anova 
+# install.packages("sjstats")
+library(lsr)
+library(ggthemes)
 ```
 
 ```{r}
@@ -122,7 +126,7 @@ STG<- subset(d, STN_NAME == "STG")
 
 # Descriptive statistics
 
-```{r descriptive-stats, message=FALSE}
+```{r descriptive-stats, message=FALSE, eval=FALSE, echo=FALSE}
 # Ns for each condition 
 # West should = 101 ; East should = 101
 N_cond <- d %>%
@@ -149,13 +153,92 @@ summary_int <- d %>%
             sd_distance = sd(DISTANCE))
 kable(summary_int, caption="Interaction summary") #interaction summary
 ```
+# Reproducing fig1
+```{r reproduce-fig1}
+d %>%
+  mutate(STN_NAME=factor(STN_NAME, levels=c("SPAD", "STG", "B-Y", "SHER"))) %>%
+  group_by(STN_NAME, DIRECTION) %>%
+  summarise(mean_distance=mean(DISTANCE), 
+            sd_distance=sd(DISTANCE),
+            n=n(),
+            y_min=mean_distance-qnorm(0.975)*sd_distance/sqrt(n),
+            y_max=mean_distance+qnorm(0.975)*sd_distance/sqrt(n)) %>%
+  ggplot(aes(x=STN_NAME, y=mean_distance, col=DIRECTION)) +
+    geom_point() +
+    geom_errorbar(aes(ymin=y_min, ymax=y_max), width=0.05) +
+    geom_path(aes(group=DIRECTION)) +
+    ylab("Subjective Distance") +
+    xlab("Station") +
+    ylim(0, 5) +
+    theme_classic() +
+    ggtitle("Reproducing Fig1") +
+    theme(plot.title = element_text(hjust = 0.5)) 
+```
+```{r fig1-manual-entry}
+# Eyeball checks from reproduced fig1
+spadinaWest <- 2.6
+spadinaEast <- 3.5
+stgeorgeWest <- 1.8
+stgeorgeEast <- 2.9
+byWest <- 2
+byEast <- 1.7
+sherWest <- 4
+sherEast <- 2.5
+```
+
+![Figure1 from paper](img/fig1.png)
+
+```{r fig1-repro-check}
+# spadina west
+reportObject <- reproCheck(reportedValue="2.5<x<3.0", 
+                           obtainedValue=spadinaWest, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+# spadina east
+reportObject <- reproCheck(reportedValue="3.5<x<4.0", 
+                           obtainedValue=spadinaEast, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+# st george west
+reportObject <- reproCheck(reportedValue="1.5<x<2.0", 
+                           obtainedValue=stgeorgeWest, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+# st george east
+reportObject <- reproCheck(reportedValue="2.5<x<3.0", 
+                           obtainedValue=stgeorgeEast, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+# bloor-yonge west
+reportObject <- reproCheck(reportedValue="2.0<x<3.5", 
+                           obtainedValue=byWest, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+# bloor-yonge east
+reportObject <- reproCheck(reportedValue="1.5<x<2.0", 
+                           obtainedValue=byEast, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+
+# sherbourne west
+reportObject <- reproCheck(reportedValue="3.5<x<4.0", 
+                           obtainedValue=sherWest, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+# sherbourne east
+reportObject <- reproCheck(reportedValue="2.5<x<3.0", 
+                           obtainedValue=sherEast, 
+                           valueType = 'mean', 
+                           eyeballCheck=TRUE)
+
+
+```
+
 
 # Inferential statistics
 
 ```{r test1}
 # 2 (DIRECTION) X 4 (STATION) ANOVA
-# reported main effect of STATION: F(3, 194)= 24.10, p < .001
-# reported interaction: F(3, 194)= 16.28, p < .001
 t1 <- aov(DISTANCE ~ DIRECTION * STN_NAME, data=d)
 t1_summary <- summary(t1)
 t1_summary
