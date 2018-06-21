@@ -15,7 +15,7 @@ pilotTTC <- 180 # insert the pilot's estimated time to complete (in minutes, fin
 copilotTTC <- 160 # insert the co- pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
 pilotStartDate <- as.Date("11/02/17", format = "%m/%d/%y") # insert the pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
 copilotStartDate <- as.Date("06/13/2018", format = "%m/%d/%y") # insert the co-pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
-completionDate <- as.Date("06/13/2018", format = "%m/%d/%y") # copilot insert the date of final report completion (after any necessary rounds of author assistance) in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+completionDate <- as.Date("06/20/2018", format = "%m/%d/%y") # copilot insert the date of final report completion (after any necessary rounds of author assistance) in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
 ```
 
 -------
@@ -54,7 +54,7 @@ knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
 options(stringsAsFactors = FALSE)
 ```
 
-## Step 1: Load packages
+# Step 1: Load packages
 
 ```{r}
 library(tidyverse) # for data munging
@@ -79,19 +79,19 @@ reportObject <- data.frame(dummyRow = TRUE,
                            comparisonOutcome = NA, eyeballCheck = NA)
 ```
 
-## Step 2: Load data
+# Step 2: Load data
 
 ```{r}
 d <- read_excel ("data/S1_Subway.xlsx")
 ```
 
-## Step 3: Tidy data
+# Step 3: Tidy data
 
 Data already in tidy format.
 
-## Step 4: Run analysis
+# Step 4: Run analysis
 
-### Pre-processing
+## Pre-processing
 
 ```{r}
 # make variables factors
@@ -124,7 +124,7 @@ STG<- subset(d, STN_NAME == "STG")
 ```
 
 
-# Descriptive statistics
+## Descriptive statistics
 
 ```{r descriptive-stats, message=FALSE, eval=FALSE, echo=FALSE}
 # Ns for each condition 
@@ -153,7 +153,9 @@ summary_int <- d %>%
             sd_distance = sd(DISTANCE))
 kable(summary_int, caption="Interaction summary") #interaction summary
 ```
-# Reproducing fig1
+
+Reproducing fig1:
+
 ```{r reproduce-fig1}
 d %>%
   mutate(STN_NAME=factor(STN_NAME, levels=c("SPAD", "STG", "B-Y", "SHER"))) %>%
@@ -174,6 +176,7 @@ d %>%
     ggtitle("Reproducing Fig1") +
     theme(plot.title = element_text(hjust = 0.5)) 
 ```
+
 ```{r fig1-manual-entry}
 # Eyeball checks from reproduced fig1
 spadinaWest <- 2.6
@@ -190,43 +193,43 @@ sherEast <- 2.5
 
 ```{r fig1-repro-check}
 # spadina west
-reportObject <- reproCheck(reportedValue="2.5<x<3.0", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=spadinaWest, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
 # spadina east
-reportObject <- reproCheck(reportedValue="3.5<x<4.0", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=spadinaEast, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
 # st george west
-reportObject <- reproCheck(reportedValue="1.5<x<2.0", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=stgeorgeWest, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
 # st george east
-reportObject <- reproCheck(reportedValue="2.5<x<3.0", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=stgeorgeEast, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
 # bloor-yonge west
-reportObject <- reproCheck(reportedValue="2.0<x<3.5", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=byWest, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
 # bloor-yonge east
-reportObject <- reproCheck(reportedValue="1.5<x<2.0", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=byEast, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
 
 # sherbourne west
-reportObject <- reproCheck(reportedValue="3.5<x<4.0", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=sherWest, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
 # sherbourne east
-reportObject <- reproCheck(reportedValue="2.5<x<3.0", 
+reportObject <- reproCheck(reportedValue="figure", 
                            obtainedValue=sherEast, 
                            valueType = 'mean', 
                            eyeballCheck=TRUE)
@@ -391,14 +394,9 @@ for (row in 1:nrow(df_stations)) {
 }
 ```
 
-## Step 5: Conclusion
+# Step 5: Conclusion
 
-Overall, this dataset was well-organized, and it was easy to implement the statistical tests described in the original paper.
-
-One conceptual issue that made it tricky to decide how to analyze the data was that the authors classified one of their ANOVA factors as "orientation" with the levels "toward" and "away from," when it appears they actually tested "direction," with the levels "East" and "West." Instead of running a 2 (toward, away from) X 4 (station) ANOVA as they described, they actually ran a 2 (East, West) X 4 (station) ANOVA and then tested whether orientation (toward, away from) influenced distance ratings by assessing differences between East and West groups for each station individually. This was a little confusing to parse out because I think I would have created a separate "orientation" variable and run an ANOVA with that based on their description of the design, but their secondary tests as well as Figure 1, which depicts orientation as "Traveling West" and "Traveling East" instead of "toward" and "away from" clued me in to the fact that they used direction instead of orientation. 
-
-
-* `Minor Error`: Main effect of station. 3.73% difference on reported F-statistic. Note that this could be due to rounding.
+We were able to successfully reproduce all target outcomes.
 
 ```{r}
 Author_Assistance = FALSE # was author assistance provided? (if so, enter TRUE)
